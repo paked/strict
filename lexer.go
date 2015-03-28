@@ -28,7 +28,12 @@ func (lex *Lexer) Lex() ([]Token, error) {
 	tokens := []Token{}
 
 	for !lex.End() {
+		if !lex.skipSpace() {
+			break
+		}
+
 		c := lex.Peek()
+
 		if c == '{' {
 			tokens = append(tokens, Token{"SCOPE_START", "{"})
 		} else if c == '}' {
@@ -41,12 +46,25 @@ func (lex *Lexer) Lex() ([]Token, error) {
 			tokens = append(tokens, token)
 		} else if token, ok := lex.name(); ok {
 			tokens = append(tokens, token)
+			continue
 		}
-		lex.space()
 		lex.Next()
 	}
 
 	return tokens, nil
+}
+
+func (lex *Lexer) skipSpace() bool {
+	for !lex.End() {
+		c := lex.Peek()
+		if !unicode.IsSpace(c) {
+			return true
+		}
+
+		lex.Next()
+	}
+
+	return false
 }
 
 func (lex *Lexer) sender() (Token, bool) {
@@ -71,7 +89,7 @@ func (lex *Lexer) space() {
 		if c := lex.Peek(); !unicode.IsSpace(c) {
 			break
 		}
-		fmt.Println("char:", string(lex.Peek()))
+		fmt.Println("this isn't space:", string(lex.Peek()))
 		lex.Next()
 	}
 }
@@ -80,10 +98,13 @@ func (lex *Lexer) name() (Token, bool) {
 	var content string
 	for !lex.End() {
 		c := lex.Peek()
-		if unicode.IsLetter(c) && unicode.IsDigit(c) {
+		if c == '}' {
+			if content == "" {
+				break
+			}
+			fmt.Println(lex.source[lex.location:])
 			return Token{"VAR_NAME", content}, true
 		}
-
 		content += string(c)
 		lex.Next()
 	}
@@ -106,9 +127,7 @@ func (lex *Lexer) list() ([]Token, bool) {
 	for !lex.End() {
 		value, ok := lex.string()
 		if !ok {
-			fmt.Println("no value")
 			return tokens, false
-			// no more list values -- something went wrong...
 		}
 		tokens = append(tokens, value)
 		lex.space()
@@ -123,6 +142,7 @@ func (lex *Lexer) list() ([]Token, bool) {
 			}
 
 			tokens = append(tokens, end)
+			lex.Next()
 			return tokens, true
 		}
 		lex.Next()
