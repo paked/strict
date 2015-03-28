@@ -37,12 +37,31 @@ func (lex *Lexer) Lex() ([]Token, error) {
 			for _, token := range toks {
 				tokens = append(tokens, token)
 			}
+		} else if token, ok := lex.sender(); ok {
+			tokens = append(tokens, token)
 		}
-
+		lex.space()
 		lex.Next()
 	}
 
 	return tokens, nil
+}
+
+func (lex *Lexer) sender() (Token, bool) {
+	old := lex.location
+	c := lex.Peek()
+	if c != '>' {
+		return Token{}, false
+	}
+
+	lex.Next()
+
+	if c != '>' {
+		lex.location = old
+		return Token{}, false
+	}
+
+	return Token{"SENDER", ">>"}, true
 }
 
 func (lex *Lexer) space() {
