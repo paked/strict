@@ -12,6 +12,6 @@
 // <integer> := \d+
 // <float> := \d+ "." \d+
 // <number> := <integer> | <float>
-// <expression> := <number> (<operator> <number>)?
+// <expression> := <variable> (<operator> <variable>)?
 // <variable> := <variable_name> | <number> | <string>
 package strict
