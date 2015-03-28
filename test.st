@@ -1,0 +1,1 @@
+{["hello", "my", "helo"] >> print()}
