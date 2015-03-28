@@ -94,11 +94,21 @@ func (lex *Lexer) space() {
 	}
 }
 
+func (lex *Lexer) variable() (Token, bool) {
+	if t, ok := lex.string(); ok {
+		return t, ok
+	} else if t, ok := lex.name(); ok {
+		return t, ok
+	}
+
+	return Token{}, false
+}
+
 func (lex *Lexer) name() (Token, bool) {
 	var content string
 	for !lex.End() {
 		c := lex.Peek()
-		if c == '}' {
+		if !isAlphabet(c) {
 			if content == "" {
 				break
 			}
@@ -125,10 +135,11 @@ func (lex *Lexer) list() ([]Token, bool) {
 	tokens = append(tokens, start)
 
 	for !lex.End() {
-		value, ok := lex.string()
+		value, ok := lex.variable()
 		if !ok {
 			return tokens, false
 		}
+
 		tokens = append(tokens, value)
 		lex.space()
 		c := lex.Peek()
@@ -232,4 +243,12 @@ func (lex *Lexer) Next() {
 
 func (lex *Lexer) Peek() rune {
 	return rune(lex.source[lex.location])
+}
+
+func isAlphabet(c rune) bool {
+	if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+		return true
+	}
+
+	return false
 }
