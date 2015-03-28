@@ -39,6 +39,8 @@ func (lex *Lexer) Lex() ([]Token, error) {
 			}
 		} else if token, ok := lex.sender(); ok {
 			tokens = append(tokens, token)
+		} else if token, ok := lex.name(); ok {
+			tokens = append(tokens, token)
 		}
 		lex.space()
 		lex.Next()
@@ -72,6 +74,21 @@ func (lex *Lexer) space() {
 		fmt.Println("char:", string(lex.Peek()))
 		lex.Next()
 	}
+}
+
+func (lex *Lexer) name() (Token, bool) {
+	var content string
+	for !lex.End() {
+		c := lex.Peek()
+		if unicode.IsLetter(c) && unicode.IsDigit(c) {
+			return Token{"VAR_NAME", content}, true
+		}
+
+		content += string(c)
+		lex.Next()
+	}
+
+	return Token{}, false
 }
 
 func (lex *Lexer) list() ([]Token, bool) {
