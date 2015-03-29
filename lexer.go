@@ -42,6 +42,10 @@ func (lex *Lexer) Lex() ([]Token, error) {
 			for _, token := range toks {
 				tokens = append(tokens, token)
 			}
+		} else if toks, ok := lex.assignment(); ok {
+			for _, token := range toks {
+				tokens = append(tokens, token)
+			}
 		} else if token, ok := lex.sender(); ok {
 			tokens = append(tokens, token)
 		} else if token, ok := lex.name(); ok {
@@ -92,6 +96,29 @@ func (lex *Lexer) space() {
 		fmt.Println("this isn't space:", string(lex.Peek()))
 		lex.Next()
 	}
+}
+
+func (lex *Lexer) assignment() ([]Token, bool) {
+	tokens := []Token{}
+
+	c := lex.Peek()
+	if c != '=' {
+		return tokens, false
+	}
+
+	lex.Next()
+	tokens = append(tokens, Token{"ASSIGN", "="})
+
+	lex.skipSpace()
+
+	value, ok := lex.variable()
+	if !ok {
+		return []Token{}, false
+	}
+
+	tokens = append(tokens, value)
+
+	return tokens, true
 }
 
 func (lex *Lexer) variable() (Token, bool) {
