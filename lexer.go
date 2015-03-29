@@ -24,6 +24,14 @@ type Token struct {
 	Value string
 }
 
+func (t Token) IsType(is TokenType) bool {
+	if t.Type == is {
+		return true
+	}
+
+	return false
+}
+
 func (t Token) String() string {
 	var postfix string
 	if len(t.Value) > 1 {
