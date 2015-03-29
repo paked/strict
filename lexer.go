@@ -97,6 +97,8 @@ func (lex *Lexer) space() {
 func (lex *Lexer) variable() (Token, bool) {
 	if t, ok := lex.string(); ok {
 		return t, ok
+	} else if t, ok := lex.number(); ok {
+		return t, ok
 	} else if t, ok := lex.name(); ok {
 		return t, ok
 	}
@@ -115,6 +117,25 @@ func (lex *Lexer) name() (Token, bool) {
 			fmt.Println(lex.source[lex.location:])
 			return Token{"VAR_NAME", content}, true
 		}
+		content += string(c)
+		lex.Next()
+	}
+
+	return Token{}, false
+}
+
+func (lex *Lexer) number() (Token, bool) {
+	var content string
+	for !lex.End() {
+		c := lex.Peek()
+		if c < '0' || c > '9' {
+			if content == "" {
+				break
+			}
+
+			return Token{"INTEGER", content}, true
+		}
+
 		content += string(c)
 		lex.Next()
 	}
