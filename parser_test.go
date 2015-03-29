@@ -2,6 +2,7 @@ package strict
 
 import (
 	"fmt"
+	"io/ioutil"
 	"testing"
 )
 
@@ -39,4 +40,29 @@ func TestVariableStores(t *testing.T) {
 		}
 		fmt.Println("got a:", v)
 	}
+}
+
+func TestParse(t *testing.T) {
+	fmt.Println("---parsing parising---")
+	d, _ := ioutil.ReadFile("test.st")
+	l := Lexer{}
+	l.source = string(d)
+
+	ts, _ := l.Lex()
+	fmt.Println("--- PARSING 4 REALZIES ---")
+	p := Parser{}
+	p.source = ts
+
+	r, err := p.parseLine()
+	if err != nil {
+		fmt.Println("SOMETHING FEFD UP!")
+	}
+
+	fmt.Println(r)
+	store := NewVariableStore(nil)
+	r.Eval(&store)
+	fmt.Println(store)
+
+	variable, err := store.Get("variable")
+	fmt.Println(variable)
 }
