@@ -5,8 +5,22 @@ import (
 	"unicode"
 )
 
+type TokenType string
+
+const (
+	ScopeStart   TokenType = "SCOPE_START"
+	ScopeEnd     TokenType = "SCOPE_END"
+	ListStart    TokenType = "LIST_START"
+	ListEnd      TokenType = "LIST_END"
+	Sender       TokenType = "SENDER"
+	String       TokenType = "STRING"
+	Number       TokenType = "NUMBER"
+	VariableName TokenType = "VAR_NAME"
+	Assign       TokenType = "ASSIGN"
+)
+
 type Token struct {
-	Type  string
+	Type  TokenType
 	Value string
 }
 
@@ -15,7 +29,7 @@ func (t Token) String() string {
 	if len(t.Value) > 1 {
 		postfix = ":" + t.Value
 	}
-	return t.Type + postfix
+	return string(t.Type) + postfix
 }
 
 type Lexer struct {
@@ -35,9 +49,9 @@ func (lex *Lexer) Lex() ([]Token, error) {
 		c := lex.Peek()
 
 		if c == '{' {
-			tokens = append(tokens, Token{"SCOPE_START", "{"})
+			tokens = append(tokens, Token{ScopeStart, "{"})
 		} else if c == '}' {
-			tokens = append(tokens, Token{"SCOPE_END", "}"})
+			tokens = append(tokens, Token{ScopeEnd, "}"})
 		} else if toks, ok := lex.list(); ok {
 			for _, token := range toks {
 				tokens = append(tokens, token)
@@ -85,7 +99,7 @@ func (lex *Lexer) sender() (Token, bool) {
 		return Token{}, false
 	}
 
-	return Token{"SENDER", ">>"}, true
+	return Token{Sender, ">>"}, true
 }
 
 func (lex *Lexer) space() {
@@ -107,7 +121,7 @@ func (lex *Lexer) assignment() ([]Token, bool) {
 	}
 
 	lex.Next()
-	tokens = append(tokens, Token{"ASSIGN", "="})
+	tokens = append(tokens, Token{Assign, "="})
 
 	lex.skipSpace()
 
@@ -142,7 +156,7 @@ func (lex *Lexer) name() (Token, bool) {
 				break
 			}
 			fmt.Println(lex.source[lex.location:])
-			return Token{"VAR_NAME", content}, true
+			return Token{VariableName, content}, true
 		}
 		content += string(c)
 		lex.Next()
@@ -160,7 +174,7 @@ func (lex *Lexer) number() (Token, bool) {
 				break
 			}
 
-			return Token{"INTEGER", content}, true
+			return Token{Number, content}, true
 		}
 
 		content += string(c)
@@ -219,30 +233,7 @@ func (lex *Lexer) listStart() (Token, bool) {
 	fmt.Println("STARTING ARRAY")
 	lex.Next()
 
-	return Token{"LIST_START", "["}, true
-}
-
-func (lex *Lexer) listValue() (Token, bool) {
-	var content string
-	for !lex.End() {
-		c := lex.Peek()
-		fmt.Println(string(c))
-		if unicode.IsDigit(c) || unicode.IsLetter(c) {
-			content += string(c)
-			lex.Next()
-			continue
-		}
-
-		ok := true
-		if content == "" {
-			fmt.Println("EMPTY CONTENT")
-			ok = false
-		}
-
-		return Token{"LIST_VALUE", content}, ok
-	}
-
-	return Token{}, false
+	return Token{ListStart, "["}, true
 }
 
 func (lex *Lexer) string() (Token, bool) {
@@ -257,7 +248,7 @@ func (lex *Lexer) string() (Token, bool) {
 		if c == '"' {
 			lex.Next()
 			fmt.Println(content)
-			return Token{"STRING", content}, true
+			return Token{String, content}, true
 		}
 
 		content += string(c)
@@ -274,7 +265,7 @@ func (lex *Lexer) listEnd() (Token, bool) {
 
 	lex.Next()
 
-	return Token{"LIST_END", "]"}, true
+	return Token{ListEnd, "]"}, true
 }
 
 func (lex *Lexer) End() bool {
